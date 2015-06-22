@@ -101,13 +101,18 @@ function Team (name, colors, town, roster){//team constructior
   this.roster = roster;
 }
 
-Team.prototype.details = function(){//displays team info
-  tRoster = this.roster;
+Team.prototype.details = function(){//displays team info, viewing purposes only
+  var aRoster = [];
+  for (var x = 0; x < this.roster.length; x++){
+    aRoster.push([("\n\n" + this.roster[x]["fullName"]),
+    ("\n" + this.roster[x]["pName"]),
+    ("\n" + this.roster[x]["stat"])]);
+  }
   //was going to have this return but JSON returns roster as [object Object]
-  console.log("\n"+"Team name: " + this.homeTown + " " + this.name +"\n"+
+  return "\n"+"Team name: " + this.homeTown + " " + this.name +"\n"+
          "Colors: " + this.colors + "\n"+
-         "Active Player Roster: ")
-  console.log(tRoster);
+         "Active Player Roster: " + aRoster;
+
 };
 
 /////////////////////below this is testing code////////////////////////////////
@@ -119,4 +124,4 @@ for (var x = 0; x < 30; x++){
 
 var theBlues = new Team("Blues", "Blue and White", "Kalispell", blueTeamRoster);
 
-theBlues.details();
+console.log(theBlues.details());
