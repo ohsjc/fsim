@@ -29,7 +29,7 @@ function Player (fName,lName, position, stat){//player constructor
   this.pName = positionList[position];
 }
 
-Player.prototype.details = function (){//displays info about player
+Player.prototype.details = function (){//displays info about player (debug)
   return "\n"+"Name: " + this.fullName +"\n"+
          "Position: " + this.pName + "\n"+
          "Ovr: " + this.stat + "\n";
@@ -101,13 +101,21 @@ function Team (name, colors, town, roster){//team constructior
   this.roster = roster;
 }
 
-Team.prototype.details = function(){//displays team info, viewing purposes only
+Team.prototype.arrange = function(){ //sort the team by position and stat
+  this.roster.sort(function(a,b){
+    return (a.position - b.position) || (b.stat - a.stat);
+  });
+}
+
+Team.prototype.details = function(){//displays team info, (debug)
+  this.arrange();
   var aRoster = [];
   for (var x = 0; x < this.roster.length; x++){
     aRoster.push([("\n\n" + this.roster[x]["fullName"]),
     ("\n" + this.roster[x]["pName"]),
     ("\n" + this.roster[x]["stat"])]);
   }
+
   //was going to have this return but JSON returns roster as [object Object]
   return "\n"+"Team name: " + this.homeTown + " " + this.name +"\n"+
          "Colors: " + this.colors + "\n"+
@@ -115,13 +123,16 @@ Team.prototype.details = function(){//displays team info, viewing purposes only
 
 };
 
-/////////////////////below this is testing code////////////////////////////////
-var blueTeamRoster = [];
-
-for (var x = 0; x < 30; x++){
-  blueTeamRoster.push(genPlayer());
+function genTeam(name, colors, town, rosterSize){//creates/populates new team{}
+  var roster = [];
+  for (var x = 0; x < rosterSize; x++){
+    roster.push(genPlayer());
+  }
+  return new Team (name, colors, town, roster);
 }
 
-var theBlues = new Team("Blues", "Blue and White", "Kalispell", blueTeamRoster);
+/////////////////////below this is testing code////////////////////////////////
 
-console.log(theBlues.details());
+var theFilibusters = genTeam("Filibusters", "Gray and White", "Chicago", 15);
+
+console.log(theFilibusters.details());
