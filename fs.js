@@ -105,7 +105,7 @@ Team.prototype.arrange = function(){ //sort the team by position and stat
   this.roster.sort(function(a,b){
     return (a.position - b.position) || (b.stat - a.stat);
   });
-}
+};
 
 Team.prototype.details = function(){//displays team info, (debug)
   this.arrange();
@@ -131,8 +131,44 @@ function genTeam(name, colors, town, rosterSize){//creates/populates new team{}
   return new Team (name, colors, town, roster);
 }
 
+var playing = true; //play loop - false to quit
+
 /////////////////////below this is testing code////////////////////////////////
 
-var theFilibusters = genTeam("Filibusters", "Gray and White", "Chicago", 15);
+//var theFilibusters = genTeam("Filibusters", "Gray and White", "Chicago", 15);
 
-console.log(theFilibusters.details());
+do{
+  var menuChoice = 0;
+  //var submenuExit = false;
+  console.log("1.Create team\n2.Edit team\n3.View team\n4.Quit");
+  menuChoice = prompt();
+  switch (parseInt(menuChoice)){
+    case 1:
+        console.log("Please enter team Name");
+        var tName = prompt();
+        console.log("Please enter team Color(s)");
+        var tColors = prompt();
+        console.log("Please enter team Town");
+        var tTown = prompt();
+        var playerTeam = genTeam(tName, tColors, tTown, 25);
+        console.log("Team Created!");
+        break;
+    case 2://come back to this
+    case 3:
+      console.log(playerTeam.details());
+      break;
+    case 4:
+      playing = false;
+      break;
+    default:
+      console.log("Not found");
+  }
+
+}while(playing === true);
+
+
+/* NOTES:
+
+add age to player
+
+*/
