@@ -20,6 +20,19 @@ var fNames = ["James","Christopher","Ronald","John","Daniel","Anthony",
 var positionList = ["Quarterback", "Halfback", "Wide Reciever", "Tight End",
 "O-Line", "D-Line", "Linebacker", "Cornerback", "Safety", "Kicker"];
 
+function askUser(questionString){
+  console.log(questionString);
+  process.stdin.setEncoding('utf8');
+  var userInput;
+  process.stdin.on('readable', function() {
+    userInput  = process.stdin.read();
+      if (userInput !== null) {
+          process.exit();
+        }
+  });
+  return userInput;
+}
+
 function Player (fName,lName, position, stat){//player constructor
   this.fName = fName;
   this.lName = lName;
@@ -140,16 +153,12 @@ var playing = true; //play loop - false to quit
 do{
   var menuChoice = 0;
   //var submenuExit = false;
-  console.log("1.Create team\n2.Edit team\n3.View team\n4.Quit");
-  menuChoice = prompt();
+  menuChoice = askUser("1.Create team\n2.Edit team\n3.View team\n4.Quit");
   switch (parseInt(menuChoice)){
     case 1:
-        console.log("Please enter team Name");
-        var tName = prompt();
-        console.log("Please enter team Color(s)");
-        var tColors = prompt();
-        console.log("Please enter team Town");
-        var tTown = prompt();
+        var tName = prompt("Please enter team Name");
+        var tColors = prompt("Please enter team Color(s)");
+        var tTown = prompt("Please enter team Town");
         var playerTeam = genTeam(tName, tColors, tTown, 25);
         console.log("Team Created!");
         break;
