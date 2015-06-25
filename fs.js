@@ -1,3 +1,8 @@
+/* NOTES:
+
+add age to player
+
+*/
 
 var lNames = ["Smith", "Anderson", "Clark","Wright","Mitchell","Johnson",
 "Thomas","Rodrick","Lopez","Peterson","Williams","Jackson",
@@ -20,7 +25,7 @@ var fNames = ["James","Christopher","Ronald","John","Daniel","Anthony",
 var positionList = ["Quarterback", "Halfback", "Wide Reciever", "Tight End",
 "O-Line", "D-Line", "Linebacker", "Cornerback", "Safety", "Kicker"];
 
-function askUser(questionString){
+/*function askUser(questionString){//unused because it's broken
   console.log(questionString);
   process.stdin.setEncoding('utf8');
   var userInput;
@@ -32,6 +37,62 @@ function askUser(questionString){
   });
   return userInput;
 }
+*/
+
+var ball = {//MASTER OBJECT ball stores variables like position, possesion
+  pos: 0, // location on field (0 - 100 or ?)
+  hold: true, // true = home team, false = away
+  down: 1, //one through four
+  hScore: 0,
+  aScore: 0,
+
+  setPos: function (newPos){
+    this.pos = newPos;
+  },
+  nextDown: function(){
+    if (this.down < 4){
+      this.down++;
+    }
+    else{
+      this.flipHold();
+    }
+  },
+  flipHold: function () {
+    if (this.hold){
+      this.hold = false;
+    }
+    else {
+      this.hold = true;
+    }
+    this.down = 1;
+  },
+  setHold: function (bool){
+    this.hold = bool;
+    },
+  giveScore: function (bool, points){
+    if (bool){
+      this.hScore = points;
+    }
+    else{
+      this.aScore = points;
+    }
+  },
+
+  ballStatus: function(){//for debug only please
+    console.log("Ball is at: ", this.pos,"\n"+
+                "Home team has the ball: ", this.hold,"\n"+
+                "The down is: ", this.down,"\n"+
+                "The home team has: ", this.hScore,"\n"+
+                "The away team has: ", this.aScore);
+  },
+  reset: function(){//refine this to take hold maybe?
+    this.pos = 0;
+    this.hold = true;
+    this.down = 1;
+    this.hScore = 0;
+    this.aScore = 0;
+  }
+};
 
 function Player (fName,lName, position, stat){//player constructor
   this.fName = fName;
@@ -68,45 +129,6 @@ function genPlayer(){//creates generic player
   statMaker());
 }
 
-var ball = {//MASTER OBJECT ball stores variables like position, possesion
-  pos: 0, // location on field (0 - 100 or ?)
-  hold: true, // true = home team, false = away
-  down: 1, //one through four
-  setPos: function (newPos){
-    this.pos = newPos;
-  },
-  nextDown: function(){
-    if (this.down < 4){
-      this.down++;
-    }
-    else{
-      this.flipHold();
-    }
-  },
-  flipHold: function () {
-    if (this.hold === true){
-      this.hold = false;
-    }
-    else {
-      this.hold = true;
-    }
-    this.down = 1;
-  },
-  setHold: function (bool){
-    this.hold = bool;
-    },
-  ballStatus: function(){//for debug only please
-    console.log("Ball is at: ", this.pos,"\n"+
-                "Home team has the ball: ", this.hold,"\n"+
-                "The down is: ", this.down,"\n");
-  },
-  reset: function(){//refine this to take hold maybe?
-    this.pos = 0;
-    this.hold = true;
-    this.down = 1;
-  }
-};
-
 function Team (name, colors, town, roster){//team constructior
   this.name = name;
   this.homeTown = town;
@@ -136,6 +158,16 @@ Team.prototype.details = function(){//displays team info, (debug)
 
 };
 
+Team.prototype.stat = function(){
+  var sumStat;
+  var tRost = this.roster;//get rid of trost probs
+  for (var x = 0; x < tRost.length; x++){
+    var player = tRost[x];
+    sumStat += player.stat;
+  }
+  return(sumStat / tRost.length);
+};
+
 function genTeam(name, colors, town, rosterSize){//creates/populates new team{}
   var roster = [];
   for (var x = 0; x < rosterSize; x++){
@@ -144,29 +176,97 @@ function genTeam(name, colors, town, rosterSize){//creates/populates new team{}
   return new Team (name, colors, town, roster);
 }
 
-var playing = true; //play loop - false to quit
+function promptAns (varAns, addedStrPrior, addedStrAfter){
+  if (arguments.length < 3){
+    addedStrAfter = "";
+    if (arguments.length < 2){
+      addedStrPrior = "";
+    }
+  }
+  console.log(addedStrPrior + " " + varAns + " "+ addedStrAfter);
+}
+
+function playMatch(homeTeam, awayTeam){
+  //var gameDetails{};
+
+  console.log("Today we have a match between the " + homeTeam.homeTown + " " +
+  homeTeam.name + " and the " + awayTeam.homeTown + " " + awayTeam.name);
+
+  function quarter(count){//normally 4, could be 1 if OT
+    var z = ""; // change this
+    var q = 1;
+    if(count === 1){
+      console.log("This game has gone into OVERTIME!");
+      z = "OT";
+    }
+    else {
+      q = z;
+    }
+    for (q; q <= count; q++){
+      var rand = Math.floor(Math.random() * ((homeTeam.stat() + awayTeam.stat()) + 1));
+      if (rand > homeTeam.stat()){
+        ball.giveScore(false, 7);
+      }
+      else{
+        ball.giveScore(true, 7);
+      }
+      ball.ballStatus();
+      alert("End of Quarter " + z);
+    }
+  }
+  quarter(4);
+  while (ball.hScore === ball.aScore){
+    quarter(1);
+  }
+
+  alert("The final score is " + homeTeam.name + " " + ball.hScore + " - " +
+  awayTeam.name + " " + ball.aScore);
+  ball.reset();
+  //return //game detail object
+}
 
 /////////////////////below this is testing code////////////////////////////////
 
-//var theFilibusters = genTeam("Filibusters", "Gray and White", "Chicago", 15);
+
+var playing = true; //play loop - false to quit
 
 do{
   var menuChoice = 0;
   //var submenuExit = false;
-  menuChoice = askUser("1.Create team\n2.Edit team\n3.View team\n4.Quit");
+  menuChoice = prompt("1.Create teams\n2.Edit team\n3.View team\n4.View Opponent" +
+  "\n5.Play match\n6.Quit");
   switch (parseInt(menuChoice)){
     case 1:
         var tName = prompt("Please enter team Name");
+        promptAns(tName, "Team Name:");
         var tColors = prompt("Please enter team Color(s)");
+        promptAns(tColors, "Team Colors:");
         var tTown = prompt("Please enter team Town");
+        promptAns(tTown, "Team Colors:");
         var playerTeam = genTeam(tName, tColors, tTown, 25);
-        console.log("Team Created!");
+        alert("Team Created!");
+        var oName = prompt("Please enter team Name");
+        promptAns(oName, "Team Name:");
+        var oColors = prompt("Please enter team Color(s)");
+        promptAns(oColors, "Team Colors:");
+        var oTown = prompt("Please enter team Town");
+        promptAns(oTown, "Team Colors:");
+        var opponentTeam = genTeam(oName, oColors, oTown, 25);
+        alert("Opponent Team Created!");
         break;
     case 2://come back to this
+      playing = false;
+      break;
     case 3:
       console.log(playerTeam.details());
       break;
     case 4:
+      console.log(opponentTeam.details());
+      break;
+    case 5:
+      playMatch(playerTeam, opponentTeam);
+      break;
+    case 6:
       playing = false;
       break;
     default:
@@ -174,10 +274,3 @@ do{
   }
 
 }while(playing === true);
-
-
-/* NOTES:
-
-add age to player
-
-*/
