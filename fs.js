@@ -15,7 +15,7 @@ var lNames = ["Smith", "Anderson", "Clark","Wright","Mitchell","Johnson",
 
 var fNames = ["James","Christopher","Ronald","John","Daniel","Anthony",
 "Robert","Kevin","Michael","Mark","Jason","William","Donald",
-"Jeff","David","George","Richard","Charles"," Steven","Joseph",
+"Jeff","David","George","Richard","Charles","Steven","Joseph",
 "Edward","Thomas","Brian","Cameron","Isaiah","Malik","Xavier",
 "Jake","Connor","Wyatt","Luke","Jack","Logan","Lucas","Jacob",
 "Maxwell","Brett","Colin","Andre","Terrell","Tyrone","Willy",
@@ -71,10 +71,10 @@ var ball = {//MASTER OBJECT ball stores variables like position, possesion
     },
   giveScore: function (bool, points){
     if (bool){
-      this.hScore = points;
+      this.hScore += points;
     }
     else{
-      this.aScore = points;
+      this.aScore += points;
     }
   },
 
@@ -150,22 +150,22 @@ Team.prototype.details = function(){//displays team info, (debug)
     ("\n" + this.roster[x]["pName"]),
     ("\n" + this.roster[x]["stat"])]);
   }
+  var tStat = this.stat();
 
   //was going to have this return but JSON returns roster as [object Object]
-  return "\n"+"Team name: " + this.homeTown + " " + this.name +"\n"+
+  return ("\n"+"Team name: " + this.homeTown + " " + this.name +"\n"+
          "Colors: " + this.colors + "\n"+
-         "Active Player Roster: " + aRoster;
-
+         "Stat: " + tStat + "\n" +
+         "Active Player Roster: " + aRoster);
 };
 
 Team.prototype.stat = function(){
-  var sumStat;
-  var tRost = this.roster;//get rid of trost probs
-  for (var x = 0; x < tRost.length; x++){
-    var player = tRost[x];
-    sumStat += player.stat;
+  var sumStat = 0;
+  for (var x = 0; x < this.roster.length; x++){
+    var curObj = this.roster[x];
+    sumStat += curObj.stat;
   }
-  return(sumStat / tRost.length);
+  return(sumStat / this.roster.length);
 };
 
 function genTeam(name, colors, town, rosterSize){//creates/populates new team{}
@@ -193,17 +193,11 @@ function playMatch(homeTeam, awayTeam){
   homeTeam.name + " and the " + awayTeam.homeTown + " " + awayTeam.name);
 
   function quarter(count){//normally 4, could be 1 if OT
-    var z = ""; // change this
-    var q = 1;
-    if(count === 1){
-      console.log("This game has gone into OVERTIME!");
-      z = "OT";
-    }
-    else {
-      q = z;
-    }
-    for (q; q <= count; q++){
-      var rand = Math.floor(Math.random() * ((homeTeam.stat() + awayTeam.stat()) + 1));
+    var z = 1;
+    var rand = 0;
+
+    for (z; z <= count; z++){
+      rand = Math.floor(Math.random() * ((homeTeam.stat() + awayTeam.stat()) + 1));
       if (rand > homeTeam.stat()){
         ball.giveScore(false, 7);
       }
@@ -216,6 +210,7 @@ function playMatch(homeTeam, awayTeam){
   }
   quarter(4);
   while (ball.hScore === ball.aScore){
+    alert("Overtime!");
     quarter(1);
   }
 
@@ -227,6 +222,8 @@ function playMatch(homeTeam, awayTeam){
 
 /////////////////////below this is testing code////////////////////////////////
 
+var playerTeam = genTeam("Goats", "Grey", "Gettysburg", 25);
+var opponentTeam = genTeam("Bees", "Black and Yellow", "Buzzington", 25);
 
 var playing = true; //play loop - false to quit
 
@@ -243,16 +240,18 @@ do{
         promptAns(tColors, "Team Colors:");
         var tTown = prompt("Please enter team Town");
         promptAns(tTown, "Team Colors:");
-        var playerTeam = genTeam(tName, tColors, tTown, 25);
+        playerTeam = genTeam(tName, tColors, tTown, 25);
         alert("Team Created!");
+        /*
         var oName = prompt("Please enter team Name");
         promptAns(oName, "Team Name:");
         var oColors = prompt("Please enter team Color(s)");
         promptAns(oColors, "Team Colors:");
         var oTown = prompt("Please enter team Town");
         promptAns(oTown, "Team Colors:");
-        var opponentTeam = genTeam(oName, oColors, oTown, 25);
+        opponentTeam = genTeam(oName, oColors, oTown, 25);
         alert("Opponent Team Created!");
+        */
         break;
     case 2://come back to this
       playing = false;
