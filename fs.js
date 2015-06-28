@@ -137,9 +137,18 @@ function Team (name, colors, town, roster){//team constructior
 }
 
 Team.prototype.arrange = function(){ //sort the team by position and stat
+  function removeEmpty (roster){
+    var empty = roster.indexOf("empty");
+    console.log(empty)
+    if (empty !== -1){
+      roster.splice(empty, 1);
+      removeEmpty(roster);
+    }
+  }
   this.roster.sort(function(a,b){
     return (a.position - b.position) || (b.stat - a.stat);
   });
+  removeEmpty(this.roster);
 };
 
 Team.prototype.details = function(){//displays team info, (debug)
@@ -148,7 +157,7 @@ Team.prototype.details = function(){//displays team info, (debug)
   for (var x = 0; x < this.roster.length; x++){
     aRoster.push([("\n\n" + this.roster[x]["fullName"]),
     ("\n" + this.roster[x]["pName"]),
-    ("\n" + this.roster[x]["stat"])]);
+    ("\n" + this.roster[x]["stat"]), ("\nID NO: " + x)]);
   }
   var tStat = this.stat();
 
@@ -166,6 +175,16 @@ Team.prototype.stat = function(){
     sumStat += curObj.stat;
   }
   return(sumStat / this.roster.length);
+};
+
+Team.prototype.cut = function(idNo, freeAgent){
+    this.roster.splice(idNo, 1);
+    if(freeAgent){
+      this.roster.splice(idNo, 0, genPlayer());
+    }
+    else{
+      this.roster.splice(idNo, 0, "empty");
+    }
 };
 
 function genTeam(name, colors, town, rosterSize){//creates/populates new team{}
@@ -187,7 +206,7 @@ function promptAns (varAns, addedStrPrior, addedStrAfter){
 }
 
 function playMatch(homeTeam, awayTeam){
-  //var gameDetails{};
+  //var gameDetails{}; this will eventually return
 
   console.log("Today we have a match between the " + homeTeam.homeTown + " " +
   homeTeam.name + " and the " + awayTeam.homeTown + " " + awayTeam.name);
@@ -220,20 +239,22 @@ function playMatch(homeTeam, awayTeam){
   //return //game detail object
 }
 
-/////////////////////below this is testing code////////////////////////////////
+/////////////////////below this is initializing code////////////////////////////
 
 var playerTeam = genTeam("Goats", "Grey", "Gettysburg", 25);
 var opponentTeam = genTeam("Bees", "Black and Yellow", "Buzzington", 25);
+var freeAgents = genTeam("Free Agents", "", "", 50);
 
-var playing = true; //play loop - false to quit
+/////////////////////play loop (please don't put things below this)////////////
 
-do{
+var playing = true; //for play loop - false to quit
+
+do{//play loop. Thinking about making this a function. will revisit
   var menuChoice = 0;
-  //var submenuExit = false;
   menuChoice = prompt("1.Create teams\n2.Edit team\n3.View team\n4.View Opponent" +
   "\n5.Play match\n6.Quit");
   switch (parseInt(menuChoice)){
-    case 1:
+    case 1://create a team - init w/ default if for faster testing
         var tName = prompt("Please enter team Name");
         promptAns(tName, "Team Name:");
         var tColors = prompt("Please enter team Color(s)");
@@ -242,7 +263,7 @@ do{
         promptAns(tTown, "Team Colors:");
         playerTeam = genTeam(tName, tColors, tTown, 25);
         alert("Team Created!");
-        /*
+        /* this is to user create an opponent team - probably won't come back
         var oName = prompt("Please enter team Name");
         promptAns(oName, "Team Name:");
         var oColors = prompt("Please enter team Color(s)");
@@ -253,19 +274,66 @@ do{
         alert("Opponent Team Created!");
         */
         break;
-    case 2://come back to this
-      playing = false;
-      break;
-    case 3:
+    case 2://add and cut players
+      var subMenu = true;
+      while (subMenu){
+        var choice = prompt("Do you wish to: \n1. Sign free agents" +
+        "\n2. Cut Players\n3. Back to Main menu");
+        switch(parseInt(choice)){
+          case 1:
+              console.log("Free agents availble:");
+              console.log(freeAgents.details());
+              do{
+                var signeeNum = prompt("Enter Player ID # you wish to sign " +
+                "(type 99 to exit)");//fix this
+                if (signeeNum <= freeAgents.roster.length && signeeNum >= 0){
+                  var player = freeAgents.roster[signeeNum];
+                  console.log("You have signed: \n" + player.details());
+                  playerTeam.roster.push(player);
+                  freeAgents.cut(signeeNum, true);
+                }
+                else if(signeeNum > freeAgents.roster.length || signeeNum < 0){
+                  console.log("No player found, going back to subMenu");
+                  signeeNum = 99;
+                }
+              }while(signeeNum !== 99);
+              break;
+          case 2:
+          console.log("Player Roster:");
+          console.log(playerTeam.details());
+          do{
+            var cutPlayer = prompt("Enter Player ID # you wish to cut " +
+            "(type 99 to exit)");//fix this
+            if (cutPlayer <= playerTeam.roster.length && cutPlayer >= 0){
+              var player = playerTeam.roster[cutPlayer];
+              console.log("You have cut: \n" + player.details());
+              freeAgents.roster.push(player);
+              playerTeam.cut(cutPlayer, false);
+            }
+            else if(cutPlayer > freeAgents.roster.length || cutPlayer < 0){
+              console.log("No player found, going back to subMenu");
+              cutPlayer = 99;
+            }
+          }while(cutPlayer !== 99);
+              break;
+          case 3:
+              subMenu = false;
+              break;
+          default:
+              console.log("Not found");
+        }
+   	 	}
+      		break;
+    case 3://display team
       console.log(playerTeam.details());
       break;
-    case 4:
+    case 4://display opponent team - this will go away or be changed
       console.log(opponentTeam.details());
       break;
-    case 5:
+    case 5://play a match... a lot to do here
       playMatch(playerTeam, opponentTeam);
       break;
-    case 6:
+    case 6://quit
       playing = false;
       break;
     default:
@@ -273,3 +341,4 @@ do{
   }
 
 }while(playing === true);
+console.log("Thank you for playing");
