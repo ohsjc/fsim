@@ -161,6 +161,14 @@ Team.prototype.details = function(){//displays team info, (debug)
   }
   var tStat = this.stat();
 
+Team.prototype.limits = function(){//checks team has correct sizes/players
+
+  function checkSize (min, max){
+    if 
+    this.roster.length <
+  }
+}
+
   //was going to have this return but JSON returns roster as [object Object]
   return ("\n"+"Team name: " + this.homeTown + " " + this.name +"\n"+
          "Colors: " + this.colors + "\n"+
