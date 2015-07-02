@@ -160,20 +160,34 @@ Team.prototype.details = function(){//displays team info, (debug)
     ("\n" + this.roster[x]["stat"]), ("\nID NO: " + x)]);
   }
   var tStat = this.stat();
-
-Team.prototype.limits = function(){//checks team has correct sizes/players
-
-  function checkSize (min, max){
-    if 
-    this.roster.length <
-  }
-}
-
   //was going to have this return but JSON returns roster as [object Object]
   return ("\n"+"Team name: " + this.homeTown + " " + this.name +"\n"+
          "Colors: " + this.colors + "\n"+
          "Stat: " + tStat + "\n" +
          "Active Player Roster: " + aRoster);
+};
+
+Team.prototype.limits = function(){//checks team has correct sizes/players
+  var length = this.roster.length;
+  var roster = this.roster;
+
+  function checkSize (position, min, max, roster){
+    roster.filter()
+    if  (length < min || length > max){
+      console.log("Position " + position + " is " + length + ". Needs to be " +
+      "between " + min + " and " + max);
+      return false;
+    }
+    else{
+      return true;
+    }
+  }
+
+//if players in roster have position of 0, check lenth
+
+
+  //return checkSize(32,35);//total size
+
 };
 
 Team.prototype.stat = function(){
@@ -339,7 +353,9 @@ do{//play loop. Thinking about making this a function. will revisit
       console.log(opponentTeam.details());
       break;
     case 5://play a match... a lot to do here
-      playMatch(playerTeam, opponentTeam);
+      if (playerTeam.limits()){
+        playMatch(playerTeam, opponentTeam);
+      }
       break;
     case 6://quit
       playing = false;
