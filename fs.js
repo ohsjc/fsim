@@ -139,7 +139,7 @@ function Team (name, colors, town, roster){//team constructior
 Team.prototype.arrange = function(){ //sort the team by position and stat
   function removeEmpty (roster){
     var empty = roster.indexOf("empty");
-    console.log(empty)
+    console.log(empty);
     if (empty !== -1){
       roster.splice(empty, 1);
       removeEmpty(roster);
@@ -170,12 +170,31 @@ Team.prototype.details = function(){//displays team info, (debug)
 Team.prototype.limits = function(){//checks team has correct sizes/players
   var length = this.roster.length;
   var roster = this.roster;
+  var constraints = [[2,3],[2,3],[3,5],[1,2],[4,6],[4,6],[3,5],[3,5],[2,4],[1,2]];
+  var positionVal = [];
+  var positionCount = [];
+  var positionCorrect = [];
 
-  function checkSize (position, min, max, roster){
-    roster.filter()
-    if  (length < min || length > max){
-      console.log("Position " + position + " is " + length + ". Needs to be " +
-      "between " + min + " and " + max);
+
+
+  function cFilt(a){
+    return a === y;
+  }
+
+  function checkSize (position, positionCount, min, max){
+    if (position === "all"){
+      if  (positionCount < min || positionCount > max){
+        console.log("Team size is " + positionCount+ ". Needs to be between " +
+        min + " and " + max);
+        return false;
+      }
+      else{
+        return true;
+      }
+    }
+    if (positionCount < min || positionCount > max){
+      console.log("Position " + positionList[position] + " is " +
+      positionCount + ". Needs to be between " + min + " and " + max);
       return false;
     }
     else{
@@ -183,11 +202,25 @@ Team.prototype.limits = function(){//checks team has correct sizes/players
     }
   }
 
-//if players in roster have position of 0, check lenth
+  for (var x = 0; x < roster.length; x++){
+    var currentPlayer = roster[x];
+    var currentPos = currentPlayer.position;
+    positionVal.push(currentPos);
+  }
+  for (var y = 0; y < positionList.length; y++){
+    var thisPos = positionVal.filter(cFilt);
+    positionCount.push(thisPos.length);
+  }
+  for (var z = 0; z < positionList.length; z++){
+    positionCorrect.push(checkSize(
+      z,positionCount[z],constraints[z][0], constraints[z][1]));
+  }
 
+  positionCorrect.push(checkSize("all", length, 32, 35));
 
-  //return checkSize(32,35);//total size
-
+  return (positionCorrect.every(function (x){
+    return x === true;
+    }));
 };
 
 Team.prototype.stat = function(){
@@ -263,7 +296,7 @@ function playMatch(homeTeam, awayTeam){
 
 /////////////////////below this is initializing code////////////////////////////
 
-var playerTeam = genTeam("Goats", "Grey", "Gettysburg", 25);
+var playerTeam = genTeam("Goats", "Grey", "Gettysburg", 34);
 var opponentTeam = genTeam("Bees", "Black and Yellow", "Buzzington", 25);
 var freeAgents = genTeam("Free Agents", "", "", 50);
 
