@@ -381,9 +381,11 @@ function playMatch(homeTeam, awayTeam){
   var playVal = 0;
   var oStat = 0;
   var dStat = 0;
-  var diff = 0;
+  var oDiff = 0;
+  var dDiff = 0;
   var rand = 0;
   var bigPlay = 0;
+  var turnover = false;
 
   console.log("Today we have a match between the " + homeTeam.homeTown + " " +
   homeTeam.name + " and the " + awayTeam.homeTown + " " + awayTeam.name);
@@ -431,11 +433,11 @@ function playMatch(homeTeam, awayTeam){
     }
 
     rand = Math.floor(Math.random() * (oStat + dStat + 1));
-    var bigPlay  = (Math.floor(Math.random() * 8));
+    bigPlay  = (Math.floor(Math.random() * 8));
 
     if (rand <= oStat){
-      playVal = Math.floor((((Math.random() * 100) * 2) * oStat)/1000)
-      if (Math.floor(Math.random() * 8) === 0){
+      playVal = Math.floor((((Math.random() * 100) * 2) * oStat)/1000);
+      if (bigPlay === 0){
         playVal = playVal * oDiff;
         console.log("Nice play by that player!");
       }
@@ -443,19 +445,30 @@ function playMatch(homeTeam, awayTeam){
     }
     else{
       console.log("Play Fail!");
-      if ( bigPlay === 0 ){
+      if (bigPlay === 0){
         playVal = Math.floor(((Math.random() * 100) * dStat)/1000);
         playVal = (0 - playVal);
         console.log("Play Fail - loss of yards: " + playVal);
       }
-      else if(bigPlay === 1   )
+      else if(bigPlay === 1){
+        playVal = 0;
+        console.log("TURNOVER!!");
+        turnover = true;
+      }
       else{
         console.log("Play Fail - incomplete");
         playVal = 0;
       }
     }
     ball.setPos(ball.pos + playVal);
-    ball.nextDown();
+    if (turnover === false){
+      ball.nextDown();
+    }
+    else{
+      ball.flipHold();
+      turnover = false;
+    }
+
     console.log("Ball Status after play: ");
     ball.ballStatus();
   }
@@ -485,14 +498,15 @@ function playMatch(homeTeam, awayTeam){
   awayTeam.name + " " + ball.aScore);
   ball.reset();
   return gameDetails;
+  //return //game detail object
 }
 
 /////////////////////below this is initializing code////////////////////////////
-
-var playerTeam = genTeam("Goats", "Grey", "Gettysburg", 35);
-
-var opponentTeam = genTeam("Bees", "Black and Yellow", "Buzzington", 35);
-var freeAgents = genTeam("Free Agents", "", "", 50);
+console.log("T1");
+var playerTeam = genTeam("Goats", "Grey", "Gettysburg", 35, false);
+console.log("G1");
+var opponentTeam = genTeam("Bees", "Black and Yellow", "Buzzington", 35, false);
+var freeAgents = genTeam("Free Agents", "", "", 50, true);
 
 
 /////////////////////play loop (please don't put things below this)////////////
@@ -581,11 +595,8 @@ do{//play loop. Thinking about making this a function. will revisit
       console.log(opponentTeam.details());
       break;
     case 5://play a match... a lot to do here
-      if (playerTeam.limits()){
-        var match = playMatch(playerTeam, opponentTeam);
-        playerTeam.games.push(match);
-        opponentTeam.games.push(match);
-        console.log(playerTeam.games);
+      if (playerTeam.limits(false)){
+        playMatch(playerTeam, opponentTeam);
       }
       break;
     case 6://quit
