@@ -2,6 +2,30 @@
 
 add age to player
 
+function initialize (){
+console.log("Initializing in limits");
+var fLoc = positionCorrect.indexOf(false);
+if (fLoc !== -1){
+ for (var x = 0; x < roster.length; x++){
+   var currentPlayer = roster[x];
+   var currentPos = currentPlayer.position;
+   if (currentPos === fLoc){
+     // this isn't working!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     console.log("Got to currentPos floc pusshing or splicing now");
+       if (positionCount[fLoc] < constraints[fLoc][0]){
+         roster.push(new Player ("John", "Doe", fLoc, 75));
+         positionCorrect[fLoc] = true;
+       }
+       else{
+         roster.splice(x, 1);
+         roster.splice(x, 0, "empty");
+         positionCorrect[fLoc] = true;
+       }
+     }
+   }
+   initialize();
+ }
+}
 */
 
 var lNames = ["Smith", "Anderson", "Clark","Wright","Mitchell","Johnson",
@@ -45,26 +69,50 @@ var ball = {//MASTER OBJECT ball stores variables like position, possesion
   down: 1, //one through four
   hScore: 0,
   aScore: 0,
+  fDown: 0,
 
   setPos: function (newPos){
     this.pos = newPos;
   },
+  setDown: function (newDown){
+    this.down = newDown;
+  },
   nextDown: function(){
-    if (this.down < 4){
-      this.down++;
+    if (this.pos >= 100){
+        ball.giveScore(ball.hold, 7);
+        ball.setPos(80);
+        ball.flipHold();
+    }
+    else if (this.pos < (this.fDown + 10)){
+      if (this.down < 4){
+        this.down++;
+      }
+      else{
+        console.log("Fourth Down! Turnover on downs");
+        this.flipHold();
+
+      }
     }
     else{
-      this.flipHold();
+      console.log("FIRST DOWN!!");
+      this.setFirst(this.pos);
     }
+  },
+  setFirst: function(firstPos){
+    this.fDown = firstPos;
+    this.setDown(1);
   },
   flipHold: function () {
     if (this.hold){
       this.hold = false;
+      this.setPos(100 - this.pos);
+      this.setFirst(this.pos);
     }
     else {
       this.hold = true;
+      this.setPos(100 - this.pos);
+      this.setFirst(this.pos);
     }
-    this.down = 1;
   },
   setHold: function (bool){
     this.hold = bool;
@@ -82,6 +130,7 @@ var ball = {//MASTER OBJECT ball stores variables like position, possesion
     console.log("Ball is at: ", this.pos,"\n"+
                 "Home team has the ball: ", this.hold,"\n"+
                 "The down is: ", this.down,"\n"+
+                "First down at: ", (this.fDown + 10), "\n"+
                 "The home team has: ", this.hScore,"\n"+
                 "The away team has: ", this.aScore);
   },
@@ -109,7 +158,7 @@ Player.prototype.details = function (){//displays info about player (debug)
          "Ovr: " + this.stat + "\n";
 };
 
-function genPlayer(){//creates generic player
+function genPlayer(position, fName, lName, stat){//creates generic player
   function nameMaker(nameset){//function that random picks name
     return nameset[(Math.floor(Math.random() * nameset.length))];
   }
@@ -125,8 +174,19 @@ function genPlayer(){//creates generic player
       return stat;
     }
   }
-  return new Player (nameMaker(fNames),nameMaker(lNames),positionMaker(),
-  statMaker());
+  if (arguments.length === 4){
+    return new Player (fName, lName, position, stat);
+  }
+  else if (arguments.length === 3){
+    return new Player (fName, lName, position, statMaker());
+  }
+  else if (arguments.length === 1){
+    return new Player (nameMaker(fNames), nameMaker(lNames), position, statMaker());
+  }
+  else{
+    return new Player (nameMaker(fNames),nameMaker(lNames),positionMaker(),
+    statMaker());
+  }
 }
 
 function Team (name, colors, town, roster){//team constructior
@@ -134,6 +194,7 @@ function Team (name, colors, town, roster){//team constructior
   this.homeTown = town;
   this.colors = colors;
   this.roster = roster;
+  this.games = [];
 }
 
 Team.prototype.arrange = function(){ //sort the team by position and stat
@@ -154,17 +215,44 @@ Team.prototype.arrange = function(){ //sort the team by position and stat
 Team.prototype.details = function(){//displays team info, (debug)
   this.arrange();
   var aRoster = [];
+
   for (var x = 0; x < this.roster.length; x++){
     aRoster.push([("\n\n" + this.roster[x]["fullName"]),
     ("\n" + this.roster[x]["pName"]),
     ("\n" + this.roster[x]["stat"]), ("\nID NO: " + x)]);
   }
-  var tStat = this.stat();
+  var starterStat = Math.floor(stat(this.starters()));
+  var tStat = Math.floor(stat(this.roster));
   //was going to have this return but JSON returns roster as [object Object]
   return ("\n"+"Team name: " + this.homeTown + " " + this.name +"\n"+
          "Colors: " + this.colors + "\n"+
          "Stat: " + tStat + "\n" +
+         "Starter Stat: " + starterStat + "\n" +
          "Active Player Roster: " + aRoster);
+};
+
+function stat(roster){
+  var sumStat = 0;
+  for (var x = 0; x < roster.length; x++){
+    if (typeof roster[x] === 'undefined'){
+      console.log("Undefined hole in roster");
+    }
+    else{
+      var curObj = roster[x];
+      sumStat += curObj.stat;
+    }
+  }
+  return(sumStat / roster.length);
+}
+
+Team.prototype.cut = function(idNo, freeAgent){
+    this.roster.splice(idNo, 1);
+    if(freeAgent){
+      this.roster.splice(idNo, 0, genPlayer());
+    }
+    else{
+      this.roster.splice(idNo, 0, "empty");
+    }
 };
 
 Team.prototype.limits = function(){//checks team has correct sizes/players
@@ -175,11 +263,9 @@ Team.prototype.limits = function(){//checks team has correct sizes/players
   var positionCount = [];
   var positionCorrect = [];
 
-
-
   function cFilt(a){
-    return a === y;
-  }
+      return a === y;
+    }
 
   function checkSize (position, positionCount, min, max){
     if (position === "all"){
@@ -211,6 +297,7 @@ Team.prototype.limits = function(){//checks team has correct sizes/players
     var thisPos = positionVal.filter(cFilt);
     positionCount.push(thisPos.length);
   }
+
   for (var z = 0; z < positionList.length; z++){
     positionCorrect.push(checkSize(
       z,positionCount[z],constraints[z][0], constraints[z][1]));
@@ -223,31 +310,54 @@ Team.prototype.limits = function(){//checks team has correct sizes/players
     }));
 };
 
-Team.prototype.stat = function(){
-  var sumStat = 0;
-  for (var x = 0; x < this.roster.length; x++){
-    var curObj = this.roster[x];
-    sumStat += curObj.stat;
-  }
-  return(sumStat / this.roster.length);
-};
+Team.prototype.starters = function(){
+  this.arrange();
+  var roster = this.roster;
+  var startingArray = [];
+  var mult = [2,4,5,6,7];
 
-Team.prototype.cut = function(idNo, freeAgent){
-    this.roster.splice(idNo, 1);
-    if(freeAgent){
-      this.roster.splice(idNo, 0, genPlayer());
+  function thisPos (player){
+    return player.position === x;
+  }
+
+  for (var x = 0; x < positionList.length; x++){
+    var currentPos = roster.filter(thisPos);
+    if (mult.indexOf(x) === -1){
+      startingArray.push(currentPos[0]);
     }
-    else{
-      this.roster.splice(idNo, 0, "empty");
+    else if (x === 4 || x === 5){
+      startingArray.push(currentPos[0],currentPos[1],currentPos[2]);
     }
+    else {
+      startingArray.push(currentPos[0],currentPos[1]);
+    }
+  }
+
+  //return new Team (this.name, this.colors, this.homeTown, startingArray);
+  return startingArray;
+  //return an array of starting players for team
 };
 
 function genTeam(name, colors, town, rosterSize){//creates/populates new team{}
   var roster = [];
-  for (var x = 0; x < rosterSize; x++){
-    roster.push(genPlayer());
+  function pushPlayer (poArray){
+    for (var y = 0; y < rosterSize; y++ ){
+      for(var z = 0; z < poArray[y]; z++){
+        roster.push(genPlayer(y));
+      }
+    }
   }
+
+  pushPlayer([3,3,4,2,5,5,4,4,3,1]);
+
+  if (roster.length < rosterSize){
+    while (roster.length !== rosterSize){
+      roster.push(genPlayer());
+    }
+  }
+
   return new Team (name, colors, town, roster);
+
 }
 
 function promptAns (varAns, addedStrPrior, addedStrAfter){
@@ -261,44 +371,129 @@ function promptAns (varAns, addedStrPrior, addedStrAfter){
 }
 
 function playMatch(homeTeam, awayTeam){
-  //var gameDetails{}; this will eventually return
+  var gameDetails = {};
+
+  var hStart = homeTeam.starters();
+  var aStart = awayTeam.starters();
+
+  var hStat = Math.floor(stat(hStart));
+  var aStat = Math.floor(stat(aStart));
+  var playVal = 0;
+  var oStat = 0;
+  var dStat = 0;
+  var diff = 0;
+  var rand = 0;
+  var bigPlay = 0;
 
   console.log("Today we have a match between the " + homeTeam.homeTown + " " +
   homeTeam.name + " and the " + awayTeam.homeTown + " " + awayTeam.name);
+  console.log("The Home rating is " + hStat + " and the Away rating is " + aStat);
 
-  function quarter(count){//normally 4, could be 1 if OT
-    var z = 1;
-    var rand = 0;
+  function quarter(qNum){
+    if (qNum === 1){
+      ball.setPos(20);
+      ball.setHold(true);
+      ball.setFirst(20);
 
-    for (z; z <= count; z++){
-      rand = Math.floor(Math.random() * ((homeTeam.stat() + awayTeam.stat()) + 1));
-      if (rand > homeTeam.stat()){
-        ball.giveScore(false, 7);
+    }
+    if (qNum === 3){
+      ball.setPos(20);
+      ball.setHold(false);
+      ball.setFirst(20);
+    }
+
+    for (var x = 0; x < 16; x++){
+      runPlay();
+      console.log("Quarter: " + qNum + " Play count: " + x);
+
+      if (qNum === "OT" && ball.hScore !== ball.aScore){
+        x = 99;
       }
-      else{
-        ball.giveScore(true, 7);
-      }
-      ball.ballStatus();
-      alert("End of Quarter " + z);
     }
   }
-  quarter(4);
+
+  function runPlay(){
+    if (ball.hold === true){
+      oStat = hStat;
+      dStat = aStat;
+    }
+    else{
+      oStat = aStat;
+      dStat = hStat;
+    }
+    oDiff = oStat - dStat;
+    if (oDiff <= 2){
+      oDiff = 3;
+    }
+    dDiff = dStat - oStat;
+    if (dDiff < 1){
+      dDiff = 2;
+    }
+
+    rand = Math.floor(Math.random() * (oStat + dStat + 1));
+    var bigPlay  = (Math.floor(Math.random() * 8));
+
+    if (rand <= oStat){
+      playVal = Math.floor((((Math.random() * 100) * 2) * oStat)/1000)
+      if (Math.floor(Math.random() * 8) === 0){
+        playVal = playVal * oDiff;
+        console.log("Nice play by that player!");
+      }
+      console.log("Play Success! Gained yards: " + playVal);
+    }
+    else{
+      console.log("Play Fail!");
+      if ( bigPlay === 0 ){
+        playVal = Math.floor(((Math.random() * 100) * dStat)/1000);
+        playVal = (0 - playVal);
+        console.log("Play Fail - loss of yards: " + playVal);
+      }
+      else if(bigPlay === 1   )
+      else{
+        console.log("Play Fail - incomplete");
+        playVal = 0;
+      }
+    }
+    ball.setPos(ball.pos + playVal);
+    ball.nextDown();
+    console.log("Ball Status after play: ");
+    ball.ballStatus();
+  }
+
+  for (var x = 1; x <=4; x++){
+    console.log("Playing quarter" + x);
+    quarter(x);
+  }
+
   while (ball.hScore === ball.aScore){
     alert("Overtime!");
-    quarter(1);
+    ball.setPos(20);
+    ball.setHold(true);
+    ball.setDown(1);
+    quarter("OT");
+
+  }
+
+  if (ball.hScore > ball.aScore){
+    gameDetails.winner = true;
+  }
+  else{
+    gameDetails.winner = false;
   }
 
   alert("The final score is " + homeTeam.name + " " + ball.hScore + " - " +
   awayTeam.name + " " + ball.aScore);
   ball.reset();
-  //return //game detail object
+  return gameDetails;
 }
 
 /////////////////////below this is initializing code////////////////////////////
 
-var playerTeam = genTeam("Goats", "Grey", "Gettysburg", 34);
-var opponentTeam = genTeam("Bees", "Black and Yellow", "Buzzington", 25);
+var playerTeam = genTeam("Goats", "Grey", "Gettysburg", 35);
+
+var opponentTeam = genTeam("Bees", "Black and Yellow", "Buzzington", 35);
 var freeAgents = genTeam("Free Agents", "", "", 50);
+
 
 /////////////////////play loop (please don't put things below this)////////////
 
@@ -387,7 +582,10 @@ do{//play loop. Thinking about making this a function. will revisit
       break;
     case 5://play a match... a lot to do here
       if (playerTeam.limits()){
-        playMatch(playerTeam, opponentTeam);
+        var match = playMatch(playerTeam, opponentTeam);
+        playerTeam.games.push(match);
+        opponentTeam.games.push(match);
+        console.log(playerTeam.games);
       }
       break;
     case 6://quit
