@@ -62,6 +62,20 @@ var positionList = ["Quarterback", "Halfback", "Wide Reciever", "Tight End",
   return userInput;
 }
 */
+var league = {
+  division: {
+    north: [],
+    south: [],
+
+    playWeek: function (playfunc, week){
+      for (){
+        playfunc(this.division.north[(x + week)], this )
+      },
+
+  };
+}
+
+
 
 var ball = {//MASTER OBJECT ball stores variables like position, possesion
   pos: 0, // location on field (0 - 100 or ?)
@@ -194,8 +208,17 @@ function Team (name, colors, town, roster){//team constructior
   this.homeTown = town;
   this.colors = colors;
   this.roster = roster;
-  this.games = [];
+  this.record = [0,0];
 }
+
+Team.prototype.game = function (gameDetail){
+  if (gameDetail.won === true){
+    this.record[0]++;
+  }
+  else{
+    this.record[1]++;
+  }
+};
 
 Team.prototype.arrange = function(){ //sort the team by position and stat
   function removeEmpty (roster){
@@ -229,6 +252,10 @@ Team.prototype.details = function(){//displays team info, (debug)
          "Stat: " + tStat + "\n" +
          "Starter Stat: " + starterStat + "\n" +
          "Active Player Roster: " + aRoster);
+};
+
+Team.prototype.showRecord = function(){
+  return this.name + "'s record is: " + this.record[0] + " - " + this.record[1];
 };
 
 function stat(roster){
@@ -371,7 +398,8 @@ function promptAns (varAns, addedStrPrior, addedStrAfter){
 }
 
 function playMatch(homeTeam, awayTeam){
-  var gameDetails = {};
+  var gameDetailsHT = {};
+  var gameDetailsAT = {};
 
   var hStart = homeTeam.starters();
   var aStart = awayTeam.starters();
@@ -488,24 +516,37 @@ function playMatch(homeTeam, awayTeam){
   }
 
   if (ball.hScore > ball.aScore){
-    gameDetails.winner = true;
+    gameDetailsHT.won = true;
+    gameDetailsAT.won = false;
   }
   else{
-    gameDetails.winner = false;
+    gameDetailsHT.won = false;
+    gameDetailsAT.won = true;
   }
 
   alert("The final score is " + homeTeam.name + " " + ball.hScore + " - " +
   awayTeam.name + " " + ball.aScore);
   ball.reset();
+  var gameDetails = [gameDetailsHT, gameDetailsAT];
   return gameDetails;
   //return //game detail object
 }
 
 /////////////////////below this is initializing code////////////////////////////
-console.log("T1");
-var playerTeam = genTeam("Goats", "Grey", "Gettysburg", 35, false);
-console.log("G1");
-var opponentTeam = genTeam("Bees", "Black and Yellow", "Buzzington", 35, false);
+
+var playerTeam = genTeam("Goats", "Grey and White", "Gatsburg", 35, false);
+var oTeam1 = genTeam("Bees", "Black and Yellow", "Bizton", 35, false);
+var oTeam2 = genTeam("FC", "Blue and Black", "Highgate", 35, false);
+var oTeam3 = genTeam("Hunters", "Orange and Camo", "Cording", 35, false);
+
+var oTeam4 = genTeam("Chuckwagons", "Green and Black", "Wood Springs", 35, false);
+var oTeam5 = genTeam("Demons", "Red and White", "Blackbridge", 35, false);
+var oTeam6 = genTeam("Colossi", "Blue and Silver", "Lilston", 35, false);
+var oTeam7 = genTeam("Petals", "Pink and Yellow", "Pelmore", 35, false);
+
+division.north = [playerTeam,oTeam1,oTeam2,oTeam3];
+division.south = [oTeam4,oTeam5,oTeam6,oTeam7];
+
 var freeAgents = genTeam("Free Agents", "", "", 50, true);
 
 
@@ -592,11 +633,15 @@ do{//play loop. Thinking about making this a function. will revisit
       console.log(playerTeam.details());
       break;
     case 4://display opponent team - this will go away or be changed
-      console.log(opponentTeam.details());
+      console.log("opponentTeam.details()");
       break;
     case 5://play a match... a lot to do here
       if (playerTeam.limits(false)){
-        playMatch(playerTeam, opponentTeam);
+        var thisGame = playMatch(division.north[0], division.north[1]);
+        playerTeam.game(thisGame[0]);
+        oTeam1.game(thisGame[1]);
+        console.log(playerTeam.showRecord());
+        console.log(oTeam1.showRecord());
       }
       break;
     case 6://quit
