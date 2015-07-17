@@ -63,19 +63,49 @@ var positionList = ["Quarterback", "Halfback", "Wide Reciever", "Tight End",
 }
 */
 var league = {
-  division: {
-    north: [],
-    south: [],
+  north: [],
+  south: [],
+  week: 1,
 
-    playWeek: function (playfunc, week){
-      for (){
-        playfunc(this.division.north[(x + week)], this )
-      },
+  playWeek: function (playfunc, week, north, south){
 
-  };
-}
+    function schedule(week){
+      console.log(week);
+      var x = (week % 3) + 1;
+      var y = (x + 1) % 3;
+      var z = (x + 2) % 3;
+      if (y === 0){
+        y = 3;
+      }
+      if (z === 0){
+        z = 3;
+      }
+      console.log("IN schedule");
+      console.log(x,y,z);
+      return [0,x,y,z];
+    }
 
+    function endWeek(week){
+      week++;
+    }
 
+    function singleMatch (playfunc, div, week){
+      var sched = schedule(week);
+      console.log(sched);
+      console.log(div[sched[0]], div[sched[1]]);
+      var g1 = playfunc(div[sched[0]], div[sched[1]]);
+      div[sched[0]].game(g1[0]);
+      div[sched[1]].game(g1[1]);
+      var g2 = playfunc(div[sched[2]], div[sched[3]]);
+      div[sched[2]].game(g2[0]);
+      div[sched[3]].game(g2[1]);
+    }
+    singleMatch(playfunc, north, week);
+    singleMatch(playfunc, south, week);
+    endWeek(week);
+  }//prolly return something uh
+
+};
 
 var ball = {//MASTER OBJECT ball stores variables like position, possesion
   pos: 0, // location on field (0 - 100 or ?)
@@ -102,13 +132,13 @@ var ball = {//MASTER OBJECT ball stores variables like position, possesion
         this.down++;
       }
       else{
-        console.log("Fourth Down! Turnover on downs");
+        //console.log("Fourth Down! Turnover on downs");
         this.flipHold();
 
       }
     }
     else{
-      console.log("FIRST DOWN!!");
+      //console.log("FIRST DOWN!!");
       this.setFirst(this.pos);
     }
   },
@@ -254,9 +284,15 @@ Team.prototype.details = function(){//displays team info, (debug)
          "Active Player Roster: " + aRoster);
 };
 
-Team.prototype.showRecord = function(){
-  return this.name + "'s record is: " + this.record[0] + " - " + this.record[1];
-};
+function showRecords (){
+  function recText(team){
+    return team.name + "'s record is: " + team.record[0] + " - " + team.record[1];
+  }
+  return recText(league.north[0]) + "\n" + recText(league.north[1]) + "\n" +
+  recText(league.north[2]) + "\n" + recText(league.north[3]) + "\n" +
+  recText(league.south[0]) +  "\n" + recText(league.south[1]) + "\n" +
+  recText(league.south[2]) + "\n" + recText(league.south[3]);
+}
 
 function stat(roster){
   var sumStat = 0;
@@ -434,7 +470,7 @@ function playMatch(homeTeam, awayTeam){
 
     for (var x = 0; x < 16; x++){
       runPlay();
-      console.log("Quarter: " + qNum + " Play count: " + x);
+      //console.log("Quarter: " + qNum + " Play count: " + x);
 
       if (qNum === "OT" && ball.hScore !== ball.aScore){
         x = 99;
@@ -467,24 +503,24 @@ function playMatch(homeTeam, awayTeam){
       playVal = Math.floor((((Math.random() * 100) * 2) * oStat)/1000);
       if (bigPlay === 0){
         playVal = playVal * oDiff;
-        console.log("Nice play by that player!");
+        //console.log("Nice play by that player!");
       }
-      console.log("Play Success! Gained yards: " + playVal);
+      //console.log("Play Success! Gained yards: " + playVal);
     }
     else{
-      console.log("Play Fail!");
+      //console.log("Play Fail!");
       if (bigPlay === 0){
         playVal = Math.floor(((Math.random() * 100) * dStat)/1000);
         playVal = (0 - playVal);
-        console.log("Play Fail - loss of yards: " + playVal);
+        //console.log("Play Fail - loss of yards: " + playVal);
       }
       else if(bigPlay === 1){
         playVal = 0;
-        console.log("TURNOVER!!");
+        //console.log("TURNOVER!!");
         turnover = true;
       }
       else{
-        console.log("Play Fail - incomplete");
+        //console.log("Play Fail - incomplete");
         playVal = 0;
       }
     }
@@ -497,8 +533,8 @@ function playMatch(homeTeam, awayTeam){
       turnover = false;
     }
 
-    console.log("Ball Status after play: ");
-    ball.ballStatus();
+    //console.log("Ball Status after play: ");
+  //  ball.ballStatus();
   }
 
   for (var x = 1; x <=4; x++){
@@ -533,7 +569,6 @@ function playMatch(homeTeam, awayTeam){
 }
 
 /////////////////////below this is initializing code////////////////////////////
-
 var playerTeam = genTeam("Goats", "Grey and White", "Gatsburg", 35, false);
 var oTeam1 = genTeam("Bees", "Black and Yellow", "Bizton", 35, false);
 var oTeam2 = genTeam("FC", "Blue and Black", "Highgate", 35, false);
@@ -544,11 +579,10 @@ var oTeam5 = genTeam("Demons", "Red and White", "Blackbridge", 35, false);
 var oTeam6 = genTeam("Colossi", "Blue and Silver", "Lilston", 35, false);
 var oTeam7 = genTeam("Petals", "Pink and Yellow", "Pelmore", 35, false);
 
-division.north = [playerTeam,oTeam1,oTeam2,oTeam3];
-division.south = [oTeam4,oTeam5,oTeam6,oTeam7];
+league.north = [playerTeam,oTeam1,oTeam2,oTeam3];
+league.south = [oTeam4,oTeam5,oTeam6,oTeam7];
 
 var freeAgents = genTeam("Free Agents", "", "", 50, true);
-
 
 /////////////////////play loop (please don't put things below this)////////////
 
@@ -633,15 +667,12 @@ do{//play loop. Thinking about making this a function. will revisit
       console.log(playerTeam.details());
       break;
     case 4://display opponent team - this will go away or be changed
-      console.log("opponentTeam.details()");
+      //console.log(opponentTeam.details());
       break;
     case 5://play a match... a lot to do here
       if (playerTeam.limits(false)){
-        var thisGame = playMatch(division.north[0], division.north[1]);
-        playerTeam.game(thisGame[0]);
-        oTeam1.game(thisGame[1]);
-        console.log(playerTeam.showRecord());
-        console.log(oTeam1.showRecord());
+        league.playWeek(playMatch, league.week, league.north, league.south);
+        console.log(showRecords());
       }
       break;
     case 6://quit
