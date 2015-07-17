@@ -67,45 +67,42 @@ var league = {
   south: [],
   week: 1,
 
-  playWeek: function (playfunc, week, north, south){
-
-    function schedule(week){
-      console.log(week);
-      var x = (week % 3) + 1;
-      var y = (x + 1) % 3;
-      var z = (x + 2) % 3;
-      if (y === 0){
-        y = 3;
-      }
-      if (z === 0){
-        z = 3;
-      }
-      console.log("IN schedule");
-      console.log(x,y,z);
-      return [0,x,y,z];
-    }
-
-    function endWeek(week){
-      week++;
-    }
-
-    function singleMatch (playfunc, div, week){
-      var sched = schedule(week);
-      console.log(sched);
-      console.log(div[sched[0]], div[sched[1]]);
-      var g1 = playfunc(div[sched[0]], div[sched[1]]);
-      div[sched[0]].game(g1[0]);
-      div[sched[1]].game(g1[1]);
-      var g2 = playfunc(div[sched[2]], div[sched[3]]);
-      div[sched[2]].game(g2[0]);
-      div[sched[3]].game(g2[1]);
-    }
-    singleMatch(playfunc, north, week);
-    singleMatch(playfunc, south, week);
-    endWeek(week);
-  }//prolly return something uh
-
+  endWeek: function(){
+    this.week++;
+  }
 };
+
+function playWeek(playfunc, week, north, south){
+
+  function schedule(week){
+    var x = (week % 3) + 1;
+    var y = (x + 1) % 3;
+    var z = (x + 2) % 3;
+    if (y === 0){
+      y = 3;
+    }
+    if (z === 0){
+      z = 3;
+    }
+
+    return [0,x,y,z];
+  }
+
+
+  function singleMatch (playfunc, div, week){
+    var sched = schedule(week);
+    var g1 = playfunc(div[sched[0]], div[sched[1]]);
+    div[sched[0]].game(g1[0]);
+    div[sched[1]].game(g1[1]);
+    var g2 = playfunc(div[sched[2]], div[sched[3]]);
+    div[sched[2]].game(g2[0]);
+    div[sched[3]].game(g2[1]);
+  }
+  singleMatch(playfunc, north, week);
+  singleMatch(playfunc, south, week);
+  league.endWeek();
+}//prolly return something uh
+
 
 var ball = {//MASTER OBJECT ball stores variables like position, possesion
   pos: 0, // location on field (0 - 100 or ?)
@@ -253,7 +250,7 @@ Team.prototype.game = function (gameDetail){
 Team.prototype.arrange = function(){ //sort the team by position and stat
   function removeEmpty (roster){
     var empty = roster.indexOf("empty");
-    console.log(empty);
+    //console.log(empty);
     if (empty !== -1){
       roster.splice(empty, 1);
       removeEmpty(roster);
@@ -286,10 +283,12 @@ Team.prototype.details = function(){//displays team info, (debug)
 
 function showRecords (){
   function recText(team){
-    return team.name + "'s record is: " + team.record[0] + " - " + team.record[1];
+    var start = team.starters();
+    var startStat = stat(start);
+    return "   (" + Math.floor(startStat) + ") " + team.name + ":  "+ team.record[0] + " - " + team.record[1];
   }
-  return recText(league.north[0]) + "\n" + recText(league.north[1]) + "\n" +
-  recText(league.north[2]) + "\n" + recText(league.north[3]) + "\n" +
+  return "\n North: \n" + recText(league.north[0]) + "\n" + recText(league.north[1]) + "\n" +
+  recText(league.north[2]) + "\n" + recText(league.north[3]) + "\n South: \n" +
   recText(league.south[0]) +  "\n" + recText(league.south[1]) + "\n" +
   recText(league.south[2]) + "\n" + recText(league.south[3]);
 }
@@ -451,9 +450,9 @@ function playMatch(homeTeam, awayTeam){
   var bigPlay = 0;
   var turnover = false;
 
-  console.log("Today we have a match between the " + homeTeam.homeTown + " " +
-  homeTeam.name + " and the " + awayTeam.homeTown + " " + awayTeam.name);
-  console.log("The Home rating is " + hStat + " and the Away rating is " + aStat);
+  //console.log("Today we have a match between the " + homeTeam.homeTown + " " +
+  //homeTeam.name + " and the " + awayTeam.homeTown + " " + awayTeam.name);
+  //console.log("The Home rating is " + hStat + " and the Away rating is " + aStat);
 
   function quarter(qNum){
     if (qNum === 1){
@@ -538,12 +537,12 @@ function playMatch(homeTeam, awayTeam){
   }
 
   for (var x = 1; x <=4; x++){
-    console.log("Playing quarter" + x);
+    //console.log("Playing quarter" + x);
     quarter(x);
   }
 
   while (ball.hScore === ball.aScore){
-    alert("Overtime!");
+    //alert("Overtime!");
     ball.setPos(20);
     ball.setHold(true);
     ball.setDown(1);
@@ -560,7 +559,7 @@ function playMatch(homeTeam, awayTeam){
     gameDetailsAT.won = true;
   }
 
-  alert("The final score is " + homeTeam.name + " " + ball.hScore + " - " +
+  console.log(" " + homeTeam.name + " " + ball.hScore + " - " +
   awayTeam.name + " " + ball.aScore);
   ball.reset();
   var gameDetails = [gameDetailsHT, gameDetailsAT];
@@ -671,8 +670,9 @@ do{//play loop. Thinking about making this a function. will revisit
       break;
     case 5://play a match... a lot to do here
       if (playerTeam.limits(false)){
-        league.playWeek(playMatch, league.week, league.north, league.south);
-        console.log(showRecords());
+        console.log("\nWeek " + league.week + " Scores: ");
+        playWeek(playMatch, league.week, league.north, league.south);
+        console.log("\n\n Standings:" + showRecords());
       }
       break;
     case 6://quit
