@@ -49,27 +49,59 @@ var fNames = ["James","Christopher","Ronald","John","Daniel","Anthony",
 var positionList = ["Quarterback", "Halfback", "Wide Reciever", "Tight End",
 "O-Line", "D-Line", "Linebacker", "Cornerback", "Safety", "Kicker"];
 
-/*function askUser(questionString){//unused because it's broken
-  console.log(questionString);
-  process.stdin.setEncoding('utf8');
-  var userInput;
-  process.stdin.on('readable', function() {
-    userInput  = process.stdin.read();
-      if (userInput !== null) {
-          process.exit();
-        }
-  });
-  return userInput;
-}
-*/
 var league = {
   north: [],
   south: [],
   week: 1,
+  nWild: [],
+  sWild: [],
+  nPlayoffs: [],
+  sPlayoffs: [],
+  champs: [],
+  champion: [],
+
 
   endWeek: function(){
-    this.week++;
+    if (this.week === 12){
+      this.north.sort(function(a,b){
+        return b.record[0] - a.record[0];
+      });
+      this.south.sort(function(a,b){
+        return b.record[0] - a.record[0];
+      });
+      this.nPlayoffs.push(this.north[0], this.north[1]);
+      console.log(this.north[0]["name"] + " and " + this.north[1]["name"] +
+      " have made the Playoffs");
+      this.sPlayoffs.push(this.south[0], this.south[1]);
+      console.log(this.south[0]["name"] + " and " + this.south[1]["name"] +
+      " have made the Playoffs");
+    }
+      this.week++;
+  },
+
+  getStandings: function(div){
+    var stands = [];
+    for (var x = 0; x < 4; x++){
+      var curTeam = div[x];
+      stands.push([curTeam.name,curTeam.record, stat(curTeam.starters())]);
+    }
+    stands.sort(function(a,b){
+      return b[1][0] - a[1][0];
+    });
+
+    function fixText(team){
+      var name = team[0];
+      var record = team[1];
+      var start = team[2];
+      return "\n   (" + Math.floor(start) + ") " + name + "  "+ record[0] + " - " + record[1];
+    }
+
+    for (var y = 0; y < 4; y++){
+      stands[y] = fixText(stands[y]);
+    }
+    return stands[0] + stands [1] + stands[2] + stands [3];
   }
+
 };
 
 function playWeek(playfunc, week, north, south){
@@ -102,7 +134,6 @@ function playWeek(playfunc, week, north, south){
   singleMatch(playfunc, south, week);
   league.endWeek();
 }//prolly return something uh
-
 
 var ball = {//MASTER OBJECT ball stores variables like position, possesion
   pos: 0, // location on field (0 - 100 or ?)
@@ -230,12 +261,13 @@ function genPlayer(position, fName, lName, stat){//creates generic player
   }
 }
 
-function Team (name, colors, town, roster){//team constructior
+function Team (name, colors, town, roster, tID){//team constructior
   this.name = name;
   this.homeTown = town;
   this.colors = colors;
   this.roster = roster;
   this.record = [0,0];
+  this.tID = tID;
 }
 
 Team.prototype.game = function (gameDetail){
@@ -280,18 +312,6 @@ Team.prototype.details = function(){//displays team info, (debug)
          "Starter Stat: " + starterStat + "\n" +
          "Active Player Roster: " + aRoster);
 };
-
-function showRecords (){
-  function recText(team){
-    var start = team.starters();
-    var startStat = stat(start);
-    return "   (" + Math.floor(startStat) + ") " + team.name + ":  "+ team.record[0] + " - " + team.record[1];
-  }
-  return "\n North: \n" + recText(league.north[0]) + "\n" + recText(league.north[1]) + "\n" +
-  recText(league.north[2]) + "\n" + recText(league.north[3]) + "\n South: \n" +
-  recText(league.south[0]) +  "\n" + recText(league.south[1]) + "\n" +
-  recText(league.south[2]) + "\n" + recText(league.south[3]);
-}
 
 function stat(roster){
   var sumStat = 0;
@@ -568,20 +588,20 @@ function playMatch(homeTeam, awayTeam){
 }
 
 /////////////////////below this is initializing code////////////////////////////
-var playerTeam = genTeam("Goats", "Grey and White", "Gatsburg", 35, false);
-var oTeam1 = genTeam("Bees", "Black and Yellow", "Bizton", 35, false);
-var oTeam2 = genTeam("FC", "Blue and Black", "Highgate", 35, false);
-var oTeam3 = genTeam("Hunters", "Orange and Camo", "Cording", 35, false);
+var playerTeam = genTeam("Goats  ", "Grey and White", "Glensburg", 35, 0);
+var oTeam1 = genTeam("Bees   ", "Black and Yellow", "Bizton", 35, 1);
+var oTeam2 = genTeam("Cosmos ", "Blue and Black", "Highgate", 35, 2);
+var oTeam3 = genTeam("Hunters", "Orange and Camo", "Cording", 35, 3);
 
-var oTeam4 = genTeam("Chuckwagons", "Green and Black", "Wood Springs", 35, false);
-var oTeam5 = genTeam("Demons", "Red and White", "Blackbridge", 35, false);
-var oTeam6 = genTeam("Colossi", "Blue and Silver", "Lilston", 35, false);
-var oTeam7 = genTeam("Petals", "Pink and Yellow", "Pelmore", 35, false);
+var oTeam4 = genTeam("Wagons ", "Green and Black", "Wood Springs", 35, 0);
+var oTeam5 = genTeam("Demons ", "Red and White", "Blackbridge", 35, 1);
+var oTeam6 = genTeam("Colossi", "Blue and Silver", "Lilston", 35, 2);
+var oTeam7 = genTeam("Petals ", "Pink and Yellow", "Pelmore", 35, 3);
 
 league.north = [playerTeam,oTeam1,oTeam2,oTeam3];
 league.south = [oTeam4,oTeam5,oTeam6,oTeam7];
 
-var freeAgents = genTeam("Free Agents", "", "", 50, true);
+var freeAgents = genTeam("Free Agents", "", "", 50, 99);
 
 /////////////////////play loop (please don't put things below this)////////////
 
@@ -672,7 +692,8 @@ do{//play loop. Thinking about making this a function. will revisit
       if (playerTeam.limits(false)){
         console.log("\nWeek " + league.week + " Scores: ");
         playWeek(playMatch, league.week, league.north, league.south);
-        console.log("\n\n Standings:" + showRecords());
+        console.log("\n\n North Standings:\n   " + league.getStandings(league.north) +
+        "\n\n South Standings:\n   " + league.getStandings(league.south));
       }
       break;
     case 6://quit
