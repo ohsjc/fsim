@@ -1,31 +1,29 @@
 /* NOTES:
+positions
+	2/3	qb = 0
+	2/3	rb = 1
+	3/5	wr(2) =2
+	1/2	te = 3
+	4/6	ol(3) = 4
 
-add age to player
+	4/6	dl(3 )=  5
+	3/5	lb(2) = 6
+	3/5	cb(2) = 7
+	2/4	s = 8
 
-function initialize (){
-console.log("Initializing in limits");
-var fLoc = positionCorrect.indexOf(false);
-if (fLoc !== -1){
- for (var x = 0; x < roster.length; x++){
-   var currentPlayer = roster[x];
-   var currentPos = currentPlayer.position;
-   if (currentPos === fLoc){
-     // this isn't working!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     console.log("Got to currentPos floc pusshing or splicing now");
-       if (positionCount[fLoc] < constraints[fLoc][0]){
-         roster.push(new Player ("John", "Doe", fLoc, 75));
-         positionCorrect[fLoc] = true;
-       }
-       else{
-         roster.splice(x, 1);
-         roster.splice(x, 0, "empty");
-         positionCorrect[fLoc] = true;
-       }
-     }
-   }
-   initialize();
- }
-}
+	1/2	k = 9
+
+
+	total min 32 max 35
+
+
+to do
+  LONG INFO GAME/SHORT INFO GAME
+  seasons!!!
+  store seasons stats
+	track stats for games
+	player stats/game change
+  add age to player
 */
 
 var lNames = ["Smith", "Anderson", "Clark","Wright","Mitchell","Johnson",
@@ -60,7 +58,6 @@ var league = {
   champs: [],
   champion: [],
 
-
   endWeek: function(){
     if (this.week === 12){
       this.north.sort(function(a,b){
@@ -75,6 +72,12 @@ var league = {
       this.sPlayoffs.push(this.south[0], this.south[1]);
       console.log(this.south[0]["name"] + " and " + this.south[1]["name"] +
       " have made the Playoffs");
+      this.north.sort(function(a,b){
+        return a.tID - b.tID;
+      });
+      this.south.sort(function(a,b){
+        return a.tID - b.tID;
+      });
     }
       this.week++;
   },
@@ -101,7 +104,6 @@ var league = {
     }
     return stands[0] + stands [1] + stands[2] + stands [3];
   }
-
 };
 
 function playWeek(playfunc, week, north, south){
@@ -120,7 +122,6 @@ function playWeek(playfunc, week, north, south){
     return [0,x,y,z];
   }
 
-
   function singleMatch (playfunc, div, week){
     var sched = schedule(week);
     var g1 = playfunc(div[sched[0]], div[sched[1]]);
@@ -130,10 +131,32 @@ function playWeek(playfunc, week, north, south){
     div[sched[2]].game(g2[0]);
     div[sched[3]].game(g2[1]);
   }
+
   singleMatch(playfunc, north, week);
   singleMatch(playfunc, south, week);
   league.endWeek();
 }//prolly return something uh
+
+function playoff(playfunc, week){
+  if(week === 13){
+    var p1 = playfunc(league.nPlayoffs[0], league.nPlayoffs[1]);
+    league.nPlayoffs[0].playoff(p1[0]);
+    league.nPlayoffs[1].playoff(p1[1]);
+    var p2 = playfunc(league.sPlayoffs[0], league.sPlayoffs[1]);
+    league.sPlayoffs[0].playoff(p2[0]);
+    league.sPlayoffs[1].playoff(p2[1]);
+    league.endWeek();
+  }
+  else if(week === 14){
+    var c1 = playfunc(league.champs[0], league.champs[1]);
+    league.champs[0].championship(c1[0]);
+    league.champs[1].championship(c1[1]);
+    console.log("________END OF SEASON_________");
+  }
+  else{
+    console.log("playoff error");
+  }
+}
 
 var ball = {//MASTER OBJECT ball stores variables like position, possesion
   pos: 0, // location on field (0 - 100 or ?)
@@ -279,6 +302,33 @@ Team.prototype.game = function (gameDetail){
   }
 };
 
+Team.prototype.playoff = function (gameDetail){
+  if (gameDetail.won === true){
+    if (this.tID < 4){
+      console.log(this.name + " is the champion of the North Division!");
+      league.champs.push(league.north[this.tID]);
+    }
+    else{
+      console.log(this.name + " is the champion of the South Division!");
+
+      league.champs.push(league.south[(this.tID % 4)]);
+    }
+
+  }
+};
+
+Team.prototype.championship = function (gameDetail){
+  if (gameDetail.won === true){
+    console.log(this.name + " is the champion of the World!!!");
+    if (this.tID < 4){
+      league.champion.push(league.north[this.tID]);
+    }
+    else{
+      league.champion.push(league.south[this.tID]);
+    }
+  }
+};
+
 Team.prototype.arrange = function(){ //sort the team by position and stat
   function removeEmpty (roster){
     var empty = roster.indexOf("empty");
@@ -420,7 +470,7 @@ Team.prototype.starters = function(){
   //return an array of starting players for team
 };
 
-function genTeam(name, colors, town, rosterSize){//creates/populates new team{}
+function genTeam(name, colors, town, rosterSize, tID){//creates/populates new team{}
   var roster = [];
   function pushPlayer (poArray){
     for (var y = 0; y < rosterSize; y++ ){
@@ -438,7 +488,7 @@ function genTeam(name, colors, town, rosterSize){//creates/populates new team{}
     }
   }
 
-  return new Team (name, colors, town, roster);
+  return new Team (name, colors, town, roster, tID);
 
 }
 
@@ -593,10 +643,10 @@ var oTeam1 = genTeam("Bees   ", "Black and Yellow", "Bizton", 35, 1);
 var oTeam2 = genTeam("Cosmos ", "Blue and Black", "Highgate", 35, 2);
 var oTeam3 = genTeam("Hunters", "Orange and Camo", "Cording", 35, 3);
 
-var oTeam4 = genTeam("Wagons ", "Green and Black", "Wood Springs", 35, 0);
-var oTeam5 = genTeam("Demons ", "Red and White", "Blackbridge", 35, 1);
-var oTeam6 = genTeam("Colossi", "Blue and Silver", "Lilston", 35, 2);
-var oTeam7 = genTeam("Petals ", "Pink and Yellow", "Pelmore", 35, 3);
+var oTeam4 = genTeam("Wagons ", "Green and Black", "Wood Springs", 35, 4);
+var oTeam5 = genTeam("Demons ", "Red and White", "Blackbridge", 35, 5);
+var oTeam6 = genTeam("Colossi", "Blue and Silver", "Lilston", 35, 6);
+var oTeam7 = genTeam("Petals ", "Pink and Yellow", "Pelmore", 35, 7);
 
 league.north = [playerTeam,oTeam1,oTeam2,oTeam3];
 league.south = [oTeam4,oTeam5,oTeam6,oTeam7];
@@ -690,10 +740,22 @@ do{//play loop. Thinking about making this a function. will revisit
       break;
     case 5://play a match... a lot to do here
       if (playerTeam.limits(false)){
-        console.log("\nWeek " + league.week + " Scores: ");
-        playWeek(playMatch, league.week, league.north, league.south);
-        console.log("\n\n North Standings:\n   " + league.getStandings(league.north) +
-        "\n\n South Standings:\n   " + league.getStandings(league.south));
+        if (league.week <= 12){
+          console.log("\nWeek " + league.week + " Scores: ");
+          playWeek(playMatch, league.week, league.north, league.south);
+          console.log("\n\n North Standings:\n   " + league.getStandings(league.north) +
+          "\n\n South Standings:\n   " + league.getStandings(league.south));
+        }
+        else if (league.week === 13){
+          console.log("\n\nIt's time for the Playoffs!!!");
+          console.log("\n\nPlayoff Scores: \n");
+          playoff(playMatch, league.week);
+        }
+        else if(league.week === 14){
+          console.log("\n\nIt's the championship match!!!\n\n");
+          playoff(playMatch, league.week);
+        }
+
       }
       break;
     case 6://quit
