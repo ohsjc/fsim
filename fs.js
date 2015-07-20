@@ -18,6 +18,7 @@ positions
 
 
 to do
+  ** sort error after player cuts - sort before 5 so team limits is correct
   LONG INFO GAME/SHORT INFO GAME
   seasons!!!
   store seasons stats
