@@ -15,11 +15,14 @@ positions
 
 
 	total min 32 max 35
+bugs
 
+*turnovers too high*
+*OVERTIME first down not reset :(*
+*ot advanatge?*
 
 to do
-  ** sort error after player cuts - sort before 5 so team limits is correct
-  LONG INFO GAME/SHORT INFO GAME
+
   seasons!!!
   store seasons stats
 	track stats for games
@@ -107,7 +110,7 @@ var league = {
   }
 };
 
-function playWeek(playfunc, week, north, south){
+function playWeek(playfunc, week, north, south, dispType){
 
   function schedule(week){
     var x = (week % 3) + 1;
@@ -123,33 +126,64 @@ function playWeek(playfunc, week, north, south){
     return [0,x,y,z];
   }
 
-  function singleMatch (playfunc, div, week){
+  function singleMatch (playfunc, div, week, dispType){
+    var dPass = false;
+    if (dispType == 2 || dispType == 3){
+      dPass = true;
+    }
     var sched = schedule(week);
-    var g1 = playfunc(div[sched[0]], div[sched[1]]);
+    var g1 = playfunc(div[sched[0]], div[sched[1]], dPass);
     div[sched[0]].game(g1[0]);
     div[sched[1]].game(g1[1]);
-    var g2 = playfunc(div[sched[2]], div[sched[3]]);
+    if(dispType == 2){
+      dPass = false;
+    }
+    var g2 = playfunc(div[sched[2]], div[sched[3]], dPass);
     div[sched[2]].game(g2[0]);
     div[sched[3]].game(g2[1]);
   }
 
-  singleMatch(playfunc, north, week);
-  singleMatch(playfunc, south, week);
+  singleMatch(playfunc, north, week, dispType);
+  if(dispType == 2){
+    singleMatch(playfunc, south, week, 1);
+  }
+  else{
+    singleMatch(playfunc, south, week, dispType);
+  }
+
   league.endWeek();
 }//prolly return something uh
 
-function playoff(playfunc, week){
+function playoff(playfunc, week, dispType){
+  var dPass = false;
+
   if(week === 13){
-    var p1 = playfunc(league.nPlayoffs[0], league.nPlayoffs[1]);
+    if (dispType == 2 || dispType == 3 ){
+      if((league.nPlayoffs[0]["tID"] === 0) && dispType == 2){
+        dPass = true;
+      }
+      else if(dispType == 3){
+        dPass = true;
+      }
+    }
+    var p1 = playfunc(league.nPlayoffs[0], league.nPlayoffs[1], dPass);
     league.nPlayoffs[0].playoff(p1[0]);
     league.nPlayoffs[1].playoff(p1[1]);
-    var p2 = playfunc(league.sPlayoffs[0], league.sPlayoffs[1]);
+    var p2 = playfunc(league.sPlayoffs[0], league.sPlayoffs[1], dispType);
     league.sPlayoffs[0].playoff(p2[0]);
     league.sPlayoffs[1].playoff(p2[1]);
     league.endWeek();
   }
   else if(week === 14){
-    var c1 = playfunc(league.champs[0], league.champs[1]);
+    if (dispType == 2 || dispType == 3 ){
+      if((league.champs[0]["tID"] === 0) && dispType == 2){
+        dPass = true;
+      }
+      else if(dispType == 3){
+        dPass = true;
+      }
+    }
+    var c1 = playfunc(league.champs[0], league.champs[1], dispType);
     league.champs[0].championship(c1[0]);
     league.champs[1].championship(c1[1]);
     console.log("________END OF SEASON_________");
@@ -223,12 +257,12 @@ var ball = {//MASTER OBJECT ball stores variables like position, possesion
   },
 
   ballStatus: function(){//for debug only please
-    console.log("Ball is at: ", this.pos,"\n"+
-                "Home team has the ball: ", this.hold,"\n"+
-                "The down is: ", this.down,"\n"+
-                "First down at: ", (this.fDown + 10), "\n"+
-                "The home team has: ", this.hScore,"\n"+
-                "The away team has: ", this.aScore);
+    return "Ball is at: " + this.pos +"\n"+
+                "The down is: "+ this.down+"\n"+
+                "First down at: "+ (this.fDown + 10)+ "\n"+
+                "Home team has the ball: "+ this.hold+"\n"+
+                "The home team has: "+ this.hScore+"\n"+
+                "The away team has: "+ this.aScore;
   },
   reset: function(){//refine this to take hold maybe?
     this.pos = 0;
@@ -503,7 +537,7 @@ function promptAns (varAns, addedStrPrior, addedStrAfter){
   console.log(addedStrPrior + " " + varAns + " "+ addedStrAfter);
 }
 
-function playMatch(homeTeam, awayTeam){
+function playMatch(homeTeam, awayTeam, dispType){
   var gameDetailsHT = {};
   var gameDetailsAT = {};
 
@@ -521,9 +555,15 @@ function playMatch(homeTeam, awayTeam){
   var bigPlay = 0;
   var turnover = false;
 
-  //console.log("Today we have a match between the " + homeTeam.homeTown + " " +
-  //homeTeam.name + " and the " + awayTeam.homeTown + " " + awayTeam.name);
-  //console.log("The Home rating is " + hStat + " and the Away rating is " + aStat);
+  function display(output){
+    if (dispType === true){
+      console.log(output);
+    }
+  }
+
+  display("Today we have a match between the " + homeTeam.homeTown + " " +
+  homeTeam.name + " and the " + awayTeam.homeTown + " " + awayTeam.name);
+  display("The Home rating is " + hStat + " and the Away rating is " + aStat);
 
   function quarter(qNum){
     if (qNum === 1){
@@ -540,7 +580,7 @@ function playMatch(homeTeam, awayTeam){
 
     for (var x = 0; x < 16; x++){
       runPlay();
-      //console.log("Quarter: " + qNum + " Play count: " + x);
+      display("Quarter: " + qNum + " Play count: " + x);
 
       if (qNum === "OT" && ball.hScore !== ball.aScore){
         x = 99;
@@ -573,24 +613,24 @@ function playMatch(homeTeam, awayTeam){
       playVal = Math.floor((((Math.random() * 100) * 2) * oStat)/1000);
       if (bigPlay === 0){
         playVal = playVal * oDiff;
-        //console.log("Nice play by that player!");
+        display("Nice play by that player!");
       }
-      //console.log("Play Success! Gained yards: " + playVal);
+      display("Play Success! Gained yards: " + playVal);
     }
     else{
-      //console.log("Play Fail!");
+      display("Play Fail!");
       if (bigPlay === 0){
         playVal = Math.floor(((Math.random() * 100) * dStat)/1000);
         playVal = (0 - playVal);
-        //console.log("Play Fail - loss of yards: " + playVal);
+        display("Play Fail - loss of yards: " + playVal);
       }
       else if(bigPlay === 1){
         playVal = 0;
-        //console.log("TURNOVER!!");
+        display("TURNOVER!!");
         turnover = true;
       }
       else{
-        //console.log("Play Fail - incomplete");
+        display("Play Fail - incomplete");
         playVal = 0;
       }
     }
@@ -603,17 +643,17 @@ function playMatch(homeTeam, awayTeam){
       turnover = false;
     }
 
-    //console.log("Ball Status after play: ");
-  //  ball.ballStatus();
+    display("Ball Status after play: ");
+    display(ball.ballStatus());
   }
 
   for (var x = 1; x <=4; x++){
-    //console.log("Playing quarter" + x);
+    display("Playing quarter" + x);
     quarter(x);
   }
 
   while (ball.hScore === ball.aScore){
-    //alert("Overtime!");
+    display("Overtime!");
     ball.setPos(20);
     ball.setHold(true);
     ball.setDown(1);
@@ -631,7 +671,7 @@ function playMatch(homeTeam, awayTeam){
   }
 
   console.log(" " + homeTeam.name + " " + ball.hScore + " - " +
-  awayTeam.name + " " + ball.aScore);
+    awayTeam.name + " " + ball.aScore);
   ball.reset();
   var gameDetails = [gameDetailsHT, gameDetailsAT];
   return gameDetails;
@@ -740,23 +780,34 @@ do{//play loop. Thinking about making this a function. will revisit
       //console.log(opponentTeam.details());
       break;
     case 5://play a match... a lot to do here
+      playerTeam.arrange();
       if (playerTeam.limits(false)){
-        if (league.week <= 12){
-          console.log("\nWeek " + league.week + " Scores: ");
-          playWeek(playMatch, league.week, league.north, league.south);
-          console.log("\n\n North Standings:\n   " + league.getStandings(league.north) +
-          "\n\n South Standings:\n   " + league.getStandings(league.south));
+        var subMenu = true;
+        while (subMenu){
+          var dispType = prompt("Playing this weeks games. Please select one of " +
+          "the following: \n\n1. Sim week\n2. View your game\n3. View all games");
+          if(dispType >= 1 && dispType <= 3 ){
+            subMenu = false;
+            if (league.week <= 12){
+              console.log("\nWeek " + league.week + " Scores: ");
+              playWeek(playMatch, league.week, league.north, league.south, dispType);
+              console.log("\n\n North Standings:\n   " + league.getStandings(league.north) +
+              "\n\n South Standings:\n   " + league.getStandings(league.south));
+            }
+            else if (league.week === 13){
+              console.log("\n\nIt's time for the Playoffs!!!");
+              console.log("\n\nPlayoff Scores: \n");
+              playoff(playMatch, league.week, dispType);
+            }
+            else if(league.week === 14){
+              console.log("\n\nIt's the championship match!!!\n\n");
+              playoff(playMatch, league.week, dispType);
+            }
+          }
+          else {
+            alert("Invalid entry! Please pick one of the given options");
+          }
         }
-        else if (league.week === 13){
-          console.log("\n\nIt's time for the Playoffs!!!");
-          console.log("\n\nPlayoff Scores: \n");
-          playoff(playMatch, league.week);
-        }
-        else if(league.week === 14){
-          console.log("\n\nIt's the championship match!!!\n\n");
-          playoff(playMatch, league.week);
-        }
-
       }
       break;
     case 6://quit
