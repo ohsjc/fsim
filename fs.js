@@ -15,12 +15,13 @@ positions
 
 
 	total min 32 max 35
+
 bugs
 
 *turnovers too high*
 *OVERTIME first down not reset :(*
 *ot advanatge?*
-
+*play count in alert showing quarter..*
 to do
 
   seasons!!!
@@ -156,33 +157,19 @@ function playWeek(playfunc, week, north, south, dispType){
 
 function playoff(playfunc, week, dispType){
   var dPass = false;
-
-  if(week === 13){
-    if (dispType == 2 || dispType == 3 ){
-      if((league.nPlayoffs[0]["tID"] === 0) && dispType == 2){
-        dPass = true;
-      }
-      else if(dispType == 3){
-        dPass = true;
-      }
-    }
+  if (dispType == 2){
+    dPass = true;
+  }
+  if (week === 13){
     var p1 = playfunc(league.nPlayoffs[0], league.nPlayoffs[1], dPass);
     league.nPlayoffs[0].playoff(p1[0]);
     league.nPlayoffs[1].playoff(p1[1]);
-    var p2 = playfunc(league.sPlayoffs[0], league.sPlayoffs[1], dispType);
+    var p2 = playfunc(league.sPlayoffs[0], league.sPlayoffs[1], dPass);
     league.sPlayoffs[0].playoff(p2[0]);
     league.sPlayoffs[1].playoff(p2[1]);
     league.endWeek();
   }
   else if(week === 14){
-    if (dispType == 2 || dispType == 3 ){
-      if((league.champs[0]["tID"] === 0) && dispType == 2){
-        dPass = true;
-      }
-      else if(dispType == 3){
-        dPass = true;
-      }
-    }
     var c1 = playfunc(league.champs[0], league.champs[1], dispType);
     league.champs[0].championship(c1[0]);
     league.champs[1].championship(c1[1]);
@@ -579,8 +566,7 @@ function playMatch(homeTeam, awayTeam, dispType){
     }
 
     for (var x = 0; x < 16; x++){
-      runPlay();
-      display("Quarter: " + qNum + " Play count: " + x);
+      runPlay(qNum);
 
       if (qNum === "OT" && ball.hScore !== ball.aScore){
         x = 99;
@@ -588,7 +574,7 @@ function playMatch(homeTeam, awayTeam, dispType){
     }
   }
 
-  function runPlay(){
+  function runPlay(qNum){
     if (ball.hold === true){
       oStat = hStat;
       dStat = aStat;
@@ -643,8 +629,12 @@ function playMatch(homeTeam, awayTeam, dispType){
       turnover = false;
     }
 
-    display("Ball Status after play: ");
-    display(ball.ballStatus());
+    if (dispType === true){
+      alert("Quarter: " + qNum + " Play count: " + x);
+      display("\nBall Status after play: \n" + ball.ballStatus());
+    }
+
+
   }
 
   for (var x = 1; x <=4; x++){
@@ -784,28 +774,43 @@ do{//play loop. Thinking about making this a function. will revisit
       if (playerTeam.limits(false)){
         var subMenu = true;
         while (subMenu){
-          var dispType = prompt("Playing this weeks games. Please select one of " +
-          "the following: \n\n1. Sim week\n2. View your game\n3. View all games");
-          if(dispType >= 1 && dispType <= 3 ){
-            subMenu = false;
-            if (league.week <= 12){
+          if (league.week <= 12){
+            var dispType = prompt("Playing this weeks games. Please select one of " +
+            "the following: \n\n1. Sim week\n2. View your game\n3. View all games");
+            if(dispType >= 1 && dispType <= 3 ){
+              subMenu = false;
               console.log("\nWeek " + league.week + " Scores: ");
               playWeek(playMatch, league.week, league.north, league.south, dispType);
               console.log("\n\n North Standings:\n   " + league.getStandings(league.north) +
               "\n\n South Standings:\n   " + league.getStandings(league.south));
             }
-            else if (league.week === 13){
-              console.log("\n\nIt's time for the Playoffs!!!");
+            else {
+              alert("Invalid entry! Please pick one of the given options");
+            }
+          }
+          else if (league.week === 13){
+            var dispType = prompt("It's the Playoffs! Would you like to: \n" +
+            "1. Sim Round\n 2. View Playoffs");
+            if(dispType == 1 || dispType == 2){
+              subMenu = false;
               console.log("\n\nPlayoff Scores: \n");
               playoff(playMatch, league.week, dispType);
             }
-            else if(league.week === 14){
-              console.log("\n\nIt's the championship match!!!\n\n");
-              playoff(playMatch, league.week, dispType);
+            else {
+              alert("Invalid entry! Please pick one of the given options");
             }
           }
-          else {
-            alert("Invalid entry! Please pick one of the given options");
+          else if (league.week === 14){
+            var dispType = prompt("It's the Championship Match! Would you like to: \n" +
+            "1. Sim Championship\n 2. View Championship");
+            if(dispType == 1 || dispType == 2){
+              subMenu = false;
+              console.log("\n\nPlayoff Scores: \n");
+              playoff(playMatch, league.week, dispType);
+            }
+            else {
+              alert("Invalid entry! Please pick one of the given options");
+            }
           }
         }
       }
